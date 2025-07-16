@@ -37,10 +37,10 @@ def printExecTrace(joblist):
     runlist.append(templist[0])
     templist.pop(0)
 
-    thetime  = 0.0
+    time  = 0.0
     while jobcount > 0:    
         for e in templist:
-            if thetime >= e[2]:
+            if time >= e[2]:
                 runlist.append(e)
                 templist.pop(e.index(e[0]))
 
@@ -51,24 +51,24 @@ def printExecTrace(joblist):
         burtime = float(job[3])
 
         if response[jobnum] == -1:
-            response[jobnum] = thetime
+            response[jobnum] = time
 
-        currwait = thetime - lastran[jobnum]
+        currwait = time - lastran[jobnum]
         wait[jobnum] += currwait
 
         if burtime > quantum:
             burtime -= quantum
             ranfor = quantum
-            print('  [ time %3d ] Run job %3d for %.2f secs' % (thetime, jobnum, ranfor))
+            print('  [ time %3d ] Run job %3d for %.2f secs' % (time, jobnum, ranfor))
             runlist.append([pid, jobnum, arrtime, burtime])
         else:
             ranfor = burtime
-            print('  [ time %3d ] Run job %3d for %.2f secs ( DONE at %.2f )' % (thetime, jobnum, ranfor, thetime + ranfor))
-            turnaround[jobnum] = thetime + ranfor
+            print('  [ time %3d ] Run job %3d for %.2f secs ( DONE at %.2f )' % (time, jobnum, ranfor, time + ranfor))
+            turnaround[jobnum] = time + ranfor
             jobcount -= 1
             
-        thetime += ranfor
-        lastran[jobnum] = thetime
+        time += ranfor
+        lastran[jobnum] = time
 
     print('\nFinal statistics:')
 
