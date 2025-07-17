@@ -36,12 +36,15 @@
 **Add Processes**
    - Enter the process name, arrival time, and burst time.
    - Click "Add Process" or use "Generate Random" to auto-fill jobs.
- ** Choose Scheduling Algorithm **
+
+**Choose An Algorithm**
    - Use the drop-down to select from FIFO, RR, SJF, SRTF, or MLFQ.
+     
 **Adjust Parameters (Optional)**  
    - Enter Time Slice for RR.
    - Set Allotment if using MLFQ.
-**Run the Simulation **
+     
+**Run The Program**
    - Click "Run Scheduling" to visualize and calculate results.
 **Analyze Results**
    - Gantt chart and job table update automatically.
