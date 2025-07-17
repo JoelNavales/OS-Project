@@ -1,4 +1,4 @@
-OS Project 01 - CPU Scheduling Visualization
+# OS Project 01 - CPU Scheduling Visualization
 
 # Project Overview
 This Python GUI application visualizes the behavior of various CPU scheduling algorithms. Built using `tkinter`, the simulator provides an interactive way to input and generate processes, select scheduling algorithms, and observe how each one handles scheduling over time.
@@ -52,5 +52,5 @@ This Python GUI application visualizes the behavior of various CPU scheduling al
    - Average turnaround, waiting, and response times are shown at the bottom.
      
 # Member Roles and Contributions
- Joel Franco V Navales - GUI design,random job generation
- Justin Ramas - Backend logic, scheduling algorithm integration, statistics calculation
+  -Joel Franco V Navales - GUI design,random job generation
+  -Justin Ramas - Backend logic, scheduling algorithm integration, statistics calculation
