@@ -50,7 +50,11 @@ This Python GUI application visualizes the behavior of various CPU scheduling al
 **Analyze Results**
    - Gantt chart and job table update automatically.
    - Average turnaround, waiting, and response times are shown at the bottom.
-     
+
+# Known Bug
+-Wrong computaiton of TurnaroundTime
+
 # Member Roles and Contributions
-  -Joel Franco V Navales - GUI design,random job generation
-  -Justin Ramas - Backend logic, scheduling algorithm integration, statistics calculation
+-Joel Franco V Navales : GUI design,random job generation.
+
+-Justin Ramas : Backend logic, scheduling algorithm integration, statistics calculation.
