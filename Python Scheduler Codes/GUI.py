@@ -6,27 +6,58 @@ import sys
 from time import sleep
 import threading
 
+#Hardcode defaults
 numQueues = 4
-
-#User Input
 timeSlice = 1
+timeAllotment = 1
+highestQueue = 0
+numberOfJobs = 5
 
-quantum = {}
-for i in range(numQueues):
-    quantum[i] = int(timeSlice)
+#User inputs
+mlfqrr_timeslice = timeSlice
+mlfq_timeallotment = timeAllotment
+all_numberofjobs = 0
 
-allotmentSlice = 1
-allotment = {}
-for i in range(numQueues):
-    allotment[i] = int(allotmentSlice)
+#Initialize joblist
+all_joblist = {}
 
-hiQueue = 0
-ioDone = {}
+#Initialize queues for mlfq
+queue = {}
+for q in range(numQueues):
+    queue[q] = []
 
-jobnum = 0
-joblist = {}
+#Initialize runlist for mlfq
+MLFQ_runlist = {}
 
 class CPUSchedulerGUI:
+
+    def getRandomColor(self):
+        r = random.randint(150, 255)
+        g = random.randint(150, 255)
+        b = random.randint(150, 255)
+    
+        return f'#{r:02x}{g:02x}{b:02x}'
+    
+    def Abort(self, str):
+        sys.stderr.write(str + '\n')
+        exit(1)
+
+    def FindQueue(self):
+        q = highestQueue
+        while q < 4:
+            if len(queue[q]) > 0:
+                return q
+            q += 1
+        if len(queue[3]) > 0:
+            return 3
+        return -1
+
+    def updateNextQueueMLFQ(self, algo_runlist, currQueue):
+        if len(algo_runlist[currQueue]) > 1:
+            nextJob = algo_runlist[currQueue][1]
+            self.queue_label.config(text="PID of Next in CPU Queue: " + str(all_joblist[nextJob]['pid']))
+        elif len(algo_runlist) >= 0:
+            self.queue_label.config(text="PID of Next in CPU Queue: N/A")
 
     def updateNextQueue(self, algo_runlist):
         if len(algo_runlist) > 1:
@@ -46,48 +77,123 @@ class CPUSchedulerGUI:
         thread.start()
 
     def generateProcesses(self):
-        #numberOfJobs = GET FROM USER
-        numberOfJobs = 5
+        global all_numberofjobs
+        global all_joblist
+        global mlfqrr_timeslice
+        global mlfq_timeallotment
 
-        global joblist
-        global jobnum
+        #NEED NUMBER OF JOBS ENTRY HERE
+        all_numberofjobs = self.NUMBEROFJOBS.get()
+        mlfqrr_timeslice = self.time_slice_entry.get()
+        mlfq_timeallotment = self.allotment_entry.get()
 
-        for jobnum in range(0,numberOfJobs):
-            pid = jobnum + 5
-            processName = "Job " + str(jobnum)
+        if all_numberofjobs == '':
+            all_numberofjobs = numberOfJobs
+
+        if mlfqrr_timeslice == '':
+            mlfqrr_timeslice = timeSlice
+        
+        if mlfq_timeallotment == '':
+            mlfq_timeallotment = timeAllotment
+
+        try:
+            all_numberofjobs = int(all_numberofjobs)
+
+            if all_numberofjobs <= 0:
+                messagebox.showerror("Error", "Please enter Number of Jobs greater than 0", icon = 'error')
+        except:
+            messagebox.showerror("Error", "Please enter a valid integer", icon = 'error')
+            return
+        
+        try:
+            mlfqrr_timeslice = int(mlfqrr_timeslice)
+
+            if mlfqrr_timeslice <= 0:
+                messagebox.showerror("Error", "Please enter Time Slice greater than 0", icon = 'error')
+        except:
+            messagebox.showerror("Error", "Please enter a valid integer", icon = 'error')
+            return
+        
+        try:
+            mlfq_timeallotment = int(mlfq_timeallotment)
+
+            if mlfq_timeallotment <= 0:
+                messagebox.showerror("Error", "Please enter Time Allotment greater than 0", icon = 'error')
+        except:
+            messagebox.showerror("Error", "Please enter a valid integer", icon = 'error')
+            return
+
+        for genpro_jobnum in range(0,numberOfJobs):
+            pid = genpro_jobnum + 5
+            processName = "Job " + str(genpro_jobnum)
             arrivalTime = int(10 * random.random()) + 1
             burstTime = int(10 * random.random()) + 1
+            color = self.getRandomColor()
 
-            joblist[jobnum] = {'currPri':hiQueue, 'ticksLeft':quantum[hiQueue],
-                    'allotLeft':allotment[hiQueue], 'arrivalTime':arrivalTime,
-                    'burstTime':burstTime, 'timeLeft':burstTime, 'firstRun':-1, 'pid': pid, 'processName': processName} 
+            all_joblist[genpro_jobnum] = {'currPri':highestQueue, 'ticksLeft':mlfqrr_timeslice,
+                    'allotLeft':mlfq_timeallotment, 'arrivalTime':arrivalTime,
+                    'burstTime':burstTime, 'timeLeft':burstTime, 'firstRun':-1, 'pid': pid, 'processName': processName, 'color': color} 
             
-            print('Got entry Process Name:', processName, 'Arrival Time:', str(arrivalTime), 'Burst Time: ', str(burstTime))
+            if arrivalTime not in MLFQ_runlist:
+                MLFQ_runlist[arrivalTime] = []
+            MLFQ_runlist[arrivalTime].append((all_numberofjobs, 'First run'))
+
+            #Update this insert to full details
             self.status_tree.insert("", tk.END, values=(pid, "WAITING"))
         
         self.action_label.config(text = "Processes has been successfully added to the queue.")
 
     def clearProcesses(self):
-        global joblist
+        global all_joblist
+        global mlfqrr_timeslice
+        global mlfq_timeallotment
+        global all_numberofjobs
+        global queue
+        global MLFQ_runlist
 
         for i in self.status_tree.get_children():
             self.status_tree.delete(i)
         self.status_tree.update()
 
-        joblist = {}
+        self.gantt_chart.delete("all")
+
+        all_joblist = {}
+        mlfqrr_timeslice = timeSlice
+        mlfq_timeallotment = timeAllotment
+        all_numberofjobs = 0
+        queue = {}
+        for q in range(numQueues):
+            queue[q] = []
+        MLFQ_runlist = {}
+
+        self.avg_wt.config(text="Average Waiting Time: 0.00")
+        self.avg_tat.config(text="Average Turnaround Time: 0.00")
+        self.avg_rt.config(text="Average Response Time: 0.00")
+        self.overall_progress["value"] = 0
+
+        self.action_label.config(text = "Processes Successfully Cleared.")
 
     def getProcessInfo(self):
-        global jobnum
-        global joblist
+        global all_numberofjobs
+        global all_joblist
+        global mlfqrr_timeslice
+        global mlfq_timeallotment
 
         processName = self.pid_entry.get()
         if processName == '':
-            processName = "Job " + str(jobnum)
+            processName = "Job " + str(all_numberofjobs)
+
+        mlfqrr_timeslice = self.time_slice_entry.get()
+        if mlfqrr_timeslice == '':
+            mlfqrr_timeslice = timeSlice
+
+        mlfq_timeallotment = self.allotment_entry.get()
+        if mlfq_timeallotment == '':
+            mlfq_timeallotment = timeAllotment
+
         arrivalTime = self.arrival_entry.get()
         burstTime = self.burst_entry.get()
-
-
-        pid = jobnum + 5
+        pid = all_numberofjobs + 5
 
         try:
             arrivalTime = int(arrivalTime)
@@ -107,19 +213,42 @@ class CPUSchedulerGUI:
             messagebox.showerror("Error", "Please enter a valid Burst Time integer", icon = 'error')
             return
 
-        print('Got entry Process Name:', processName, 'Arrival Time:', str(arrivalTime), 'Burst Time: ', str(burstTime))
+        try:
+            mlfqrr_timeslice = int(mlfqrr_timeslice)
 
-        joblist[jobnum] = {'currPri':hiQueue, 'ticksLeft':quantum[hiQueue],
-                    'allotLeft':allotment[hiQueue], 'arrivalTime':arrivalTime,
-                    'burstTime':burstTime, 'timeLeft':burstTime, 'firstRun':-1, 'pid': pid, 'processName': processName} 
+            if mlfqrr_timeslice <= 0:
+                messagebox.showerror("Error", "Please enter Time Slice greater than 0", icon = 'error')
+        except:
+            messagebox.showerror("Error", "Please enter a valid integer", icon = 'error')
+            return
         
+        try:
+            mlfq_timeallotment = int(mlfq_timeallotment)
+
+            if mlfq_timeallotment <= 0:
+                messagebox.showerror("Error", "Please enter Time Allotment greater than 0", icon = 'error')
+        except:
+            messagebox.showerror("Error", "Please enter a valid integer", icon = 'error')
+            return
+
+        color = self.getRandomColor()
+
+        all_joblist[all_numberofjobs] = {'currPri':highestQueue, 'ticksLeft':mlfqrr_timeslice,
+                'allotLeft':mlfq_timeallotment, 'arrivalTime':arrivalTime,
+                'burstTime':burstTime, 'timeLeft':burstTime, 'firstRun':-1, 'pid': pid, 'processName': processName, 'color': color} 
+        
+        if arrivalTime not in MLFQ_runlist:
+            MLFQ_runlist[arrivalTime] = []
+        MLFQ_runlist[arrivalTime].append((all_numberofjobs, 'First run'))
+        
+        #Update this insert to full details
         self.status_tree.insert("", tk.END, values=(pid))
         self.action_label.config(text = processName +  " has been successfully added to the queue.")
         
-        jobnum+=1
+        all_numberofjobs+=1
 
     def run_scheduling(self):
-        global joblist
+        global all_joblist
 
         self.gantt_chart.delete("all")
         selected_algorithm = self.clicked.get()
@@ -128,70 +257,76 @@ class CPUSchedulerGUI:
 
         if selected_algorithm == "FIFO":
             FIFO_joblist = []
+
+            #Initialize values for the progress bar
             progress = 0.0
             totalBurstTime = 0
 
-            for e in joblist:
-                pid = joblist[e]['pid']
-                jobnum = e
-                processName = joblist[e]['processName']
-                arrivalTime = joblist[e]['arrivalTime']
-                burstTime = joblist[e]['burstTime']
+            #Copy only needed info from all_joblist
+            for e in all_joblist:
+                pid = all_joblist[e]['pid']
+                FIFO_jobnum = e
+                processName = all_joblist[e]['processName']
+                arrivalTime = all_joblist[e]['arrivalTime']
+                burstTime = all_joblist[e]['burstTime']
+                color = all_joblist[e]['color']
 
-                FIFO_joblist.append([pid, jobnum, processName, arrivalTime, burstTime])
-                print('[PID', str(pid), '] Jobnum', str(jobnum), 'Job Name ', processName, '[Arrival Time:', str(arrivalTime), '| Burst Time: ', str(burstTime), ']')
+                FIFO_joblist.append([pid, FIFO_jobnum, processName, arrivalTime, burstTime, color])
+                print('[PID', str(pid), '] Jobnum', str(FIFO_jobnum), 'Job Name ', processName, '[Arrival Time:', str(arrivalTime), '| Burst Time: ', str(burstTime), ']')
 
+            #Sorts the joblist based on their arrival time
             FIFO_joblist = sorted(FIFO_joblist, key=lambda e: e[3])
 
+            #Get total burst time for progress bar
             for b in FIFO_joblist:
                 totalBurstTime += b[4]
+            x = 10
 
-            print('Execution trace:')
+            print('\n Debug Execution trace:')
             turnaround = {}
             response = {}
             lastran = {}
             wait = {}
-            quantum  = 1.0
+            quantum  = timeSlice
             jobcount = len(FIFO_joblist)
-            x = 10
 
+            #Stores data of every job
             for i in range(0,jobcount):
                 lastran[i] = 0.0
                 wait[i] = 0.0
                 turnaround[i] = 0.0
                 response[i] = -1
-
+            
+            #To keep track on which jobs are in the queue and not
+            runlist = []
             templist = []
             for e in FIFO_joblist:
                 templist.append(e)
-
-            runlist = []
-            # runlist.append(templist[0])
-            # templist.pop(0)
 
             index = 0
             for e in templist:
                 if 0 == e[3]:
                     runlist.append(templist[index])
                     templist.pop(index)
-                    break
                     
                 index+=1
 
-            thetime  = 0.0
+            scheduler_time  = 0.0
             while jobcount > 0:  
                 if len(runlist) != 0:
-                    jobnum = runlist[0][1]
+                    FIFO_jobnum = runlist[0][1]
 
+                    #Sets response time of job
                     if response[runlist[0][1]] == -1:
-                        response[runlist[0][1]] = thetime
+                        response[runlist[0][1]] = scheduler_time
 
-                    currwait = thetime - lastran[runlist[0][1]]
+                    currwait = scheduler_time - lastran[runlist[0][1]]
                     wait[runlist[0][1]] += currwait
 
+                #IF no job is in the run queue
                 if len(runlist) == 0:
                     ranfor = quantum
-                    print('  [ time %3d ] CPU idle for %.2f secs' % (thetime, ranfor))
+                    print('  [ time %3d ] CPU idle for %.2f secs' % (scheduler_time, ranfor))
 
                     #Update Gantt Chart
                     width = ranfor * 40
@@ -205,37 +340,39 @@ class CPUSchedulerGUI:
 
                     #Update Gantt Chart
                     width = ranfor * 40
-                    self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill="skyblue")
+                    self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill=runlist[0][5])
                     self.gantt_chart.create_text(x + width / 2, 25, text=str(runlist[0][0]))
                     x += width
+
                     progress = self.updateOverallProgress(totalBurstTime, progress, ranfor)
                     self.updateNextQueue(runlist)
 
-                    print('  [ time %3d ] Run job %3d for %.2f secs' % (thetime, runlist[0][1], ranfor))
+                    print('  [ time %3d ] Run job %3d for %.2f secs' % (scheduler_time, runlist[0][1], ranfor))
                     
                 elif runlist[0][4] <= quantum:
                     ranfor = runlist[0][4]
-                    print('  [ time %3d ] Run job %3d for %.2f secs ( DONE at %.2f )' % (thetime, runlist[0][1], ranfor, thetime + ranfor))
-                    turnaround[runlist[0][1]] = thetime + ranfor
+                    print('  [ time %3d ] Run job %3d for %.2f secs ( DONE at %.2f )' % (scheduler_time, runlist[0][1], ranfor, scheduler_time + ranfor))
+                    turnaround[runlist[0][1]] = scheduler_time + ranfor
 
                     #Update Gantt Chart
-                    
                     width = ranfor * 40
-                    self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill="skyblue")
+                    self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill=runlist[0][5])
                     self.gantt_chart.create_text(x + width / 2, 25, text=str(runlist[0][0]))
                     x += width
+
                     progress = self.updateOverallProgress(totalBurstTime, progress, ranfor)
                     self.updateNextQueue(runlist)
                     
                     runlist.pop(0)
                     jobcount -= 1
                     
-                thetime += ranfor
-                lastran[jobnum] = thetime
+                scheduler_time += ranfor
+                lastran[FIFO_jobnum] = scheduler_time
 
                 index = 0
                 for e in templist:
-                    if thetime >= e[3]:
+                    #If scheduler time is >= arrival time, add to run queue
+                    if scheduler_time >= e[3]:
                         runlist.append(templist[index])
                         templist.pop(index)
                         break
@@ -269,49 +406,53 @@ class CPUSchedulerGUI:
 
             
 
-
         elif selected_algorithm == "SJF":
             SJF_joblist = []
+
+            #Initialize values for the progress bar
             progress = 0.0
             totalBurstTime = 0
 
-            for e in joblist:
-                pid = joblist[e]['pid']
-                jobnum = e
-                processName = joblist[e]['processName']
-                arrivalTime = joblist[e]['arrivalTime']
-                burstTime = joblist[e]['burstTime']
+            #Copy only needed info from all_joblist
+            for e in all_joblist:
+                pid = all_joblist[e]['pid']
+                SJF_jobnum = e
+                processName = all_joblist[e]['processName']
+                arrivalTime = all_joblist[e]['arrivalTime']
+                burstTime = all_joblist[e]['burstTime']
+                color = all_joblist[e]['color']
 
-                SJF_joblist.append([pid, jobnum, processName, arrivalTime, burstTime])
-                print('[PID', str(pid), '] Jobnum', str(jobnum), 'Job Name ', processName, '[Arrival Time:', str(arrivalTime), '| Burst Time: ', str(burstTime), ']')
+                SJF_joblist.append([pid, SJF_jobnum, processName, arrivalTime, burstTime, color])
+                print('[PID', str(pid), '] SJF_jobnum', str(SJF_jobnum), 'Job Name ', processName, '[Arrival Time:', str(arrivalTime), '| Burst Time: ', str(burstTime), ']')
 
+            #Sorts the joblist based on their arrival time then their burst time
             SJF_joblist = sorted(SJF_joblist, key=lambda e: (e[3], e[4]))
 
+            #Get total burst time for progress bar
             for b in SJF_joblist:
                 totalBurstTime += b[4]
+            x = 10
 
-            print('Execution trace:')
+            print('\n Debug Execution trace:')
             turnaround = {}
             response = {}
             lastran = {}
             wait = {}
-            quantum  = 1.0
+            quantum  = timeSlice
             jobcount = len(SJF_joblist)
-            x = 10
-
+            
+            #Stores data of every job
             for i in range(0,jobcount):
                 lastran[i] = 0.0
                 wait[i] = 0.0
                 turnaround[i] = 0.0
                 response[i] = -1
 
+            #To keep track on which jobs are in the queue and not
+            runlist = []
             templist = []
             for e in SJF_joblist:
                 templist.append(e)
-
-            runlist = []
-            # runlist.append(templist[0])
-            # templist.pop(0)
 
             index = 0
             for e in templist:
@@ -322,19 +463,22 @@ class CPUSchedulerGUI:
                     
                 index+=1
 
-            thetime  = 0.0
+            scheduler_time  = 0.0
             while jobcount > 0:  
                 if len(runlist) != 0:
-                    jobnum =  runlist[0][1]
-                    if response[runlist[0][1]] == -1:
-                        response[runlist[0][1]] = thetime
+                    SJF_jobnum =  runlist[0][1]
 
-                    currwait = thetime - lastran[runlist[0][1]]
+                    #Sets response time of job
+                    if response[runlist[0][1]] == -1:
+                        response[runlist[0][1]] = scheduler_time
+
+                    currwait = scheduler_time - lastran[runlist[0][1]]
                     wait[runlist[0][1]] += currwait
 
+                #IF no job is in the run queue
                 if len(runlist) == 0:
                     ranfor = quantum
-                    print('  [ time %3d ] CPU idle for %.2f secs' % (thetime, ranfor))
+                    print('  [ time %3d ] CPU idle for %.2f secs' % (scheduler_time, ranfor))
 
                     #Update Gantt Chart
                     width = ranfor * 40
@@ -348,23 +492,22 @@ class CPUSchedulerGUI:
 
                     #Update Gantt Chart
                     width = ranfor * 40
-                    self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill="skyblue")
+                    self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill=runlist[0][5])
                     self.gantt_chart.create_text(x + width / 2, 25, text=str(runlist[0][0]))
                     x += width
                     progress = self.updateOverallProgress(totalBurstTime, progress, ranfor)
                     self.updateNextQueue(runlist)
 
-                    print('  [ time %3d ] Run job %3d for %.2f secs' % (thetime, runlist[0][1], ranfor))
+                    print('  [ time %3d ] Run job %3d for %.2f secs' % (scheduler_time, runlist[0][1], ranfor))
                     
                 elif runlist[0][4] <= quantum:
                     ranfor = runlist[0][4]
-                    print('  [ time %3d ] Run job %3d for %.2f secs ( DONE at %.2f )' % (thetime, runlist[0][1], ranfor, thetime + ranfor))
-                    turnaround[runlist[0][1]] = thetime + ranfor
+                    print('  [ time %3d ] Run job %3d for %.2f secs ( DONE at %.2f )' % (scheduler_time, runlist[0][1], ranfor, scheduler_time + ranfor))
+                    turnaround[runlist[0][1]] = scheduler_time + ranfor
 
                     #Update Gantt Chart
-                    
                     width = ranfor * 40
-                    self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill="skyblue")
+                    self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill=runlist[0][5])
                     self.gantt_chart.create_text(x + width / 2, 25, text=str(runlist[0][0]))
                     x += width
                     progress = self.updateOverallProgress(totalBurstTime, progress, ranfor)
@@ -374,14 +517,16 @@ class CPUSchedulerGUI:
 
                     if len(runlist) != 0:
                         runlist = sorted(runlist, key=lambda e: e[4])
+
                     jobcount -= 1
                     
-                thetime += ranfor
-                lastran[jobnum] = thetime
+                scheduler_time += ranfor
+                lastran[SJF_jobnum] = scheduler_time
 
                 index = 0
                 for e in templist:
-                    if thetime >= e[3]:
+                    #If scheduler time is >= arrival time, add to run queue
+                    if scheduler_time >= e[3]:
                         runlist.append(templist[index])
                         templist.pop(index)
                         break
@@ -415,78 +560,91 @@ class CPUSchedulerGUI:
 
             
 
-
         elif selected_algorithm == "RR":
             RR_joblist = []
+
+            #Initialize values for the progress bar
             progress = 0.0
             totalBurstTime = 0
 
-            for e in joblist:
-                pid = joblist[e]['pid']
-                jobnum = e
-                processName = joblist[e]['processName']
-                arrivalTime = joblist[e]['arrivalTime']
-                burstTime = joblist[e]['burstTime']
+            #Copy only needed info from all_joblist
+            for e in all_joblist:
+                pid = all_joblist[e]['pid']
+                RR_jobnum = e
+                processName = all_joblist[e]['processName']
+                arrivalTime = all_joblist[e]['arrivalTime']
+                burstTime = all_joblist[e]['burstTime']
+                color = all_joblist[e]['color']
 
-                RR_joblist.append([pid, jobnum, processName, arrivalTime, burstTime])
-                print('[PID', str(pid), '] Jobnum', str(jobnum), 'Job Name ', processName, '[Arrival Time:', str(arrivalTime), '| Burst Time: ', str(burstTime), ']')
+                RR_joblist.append([pid, RR_jobnum, processName, arrivalTime, burstTime, color])
+                print('[PID', str(pid), '] RR_jobnum', str(RR_jobnum), 'Job Name ', processName, '[Arrival Time:', str(arrivalTime), '| Burst Time: ', str(burstTime), ']')
 
+            #Sorts the joblist based on their arrival time
             RR_joblist = sorted(RR_joblist, key=lambda e: e[3])
 
+            #Get total burst time for progress bar
             for b in RR_joblist:
                 totalBurstTime += b[4]
+            x = 10
 
-            print('Execution trace:')
+            print('\n Debug Execution trace:')
             turnaround = {}
             response = {}
             lastran = {}
             wait = {}
-            quantum  = 1.0
+            quantum  = mlfqrr_timeslice
             jobcount = len(RR_joblist)
-            x = 10
-
+            
+            #Stores data of every job
             for i in range(0,jobcount):
                 lastran[i] = 0.0
                 wait[i] = 0.0
                 turnaround[i] = 0.0
                 response[i] = -1
             
+            #To keep track on which jobs are in the queue and not
+            runlist = []
             templist = []
             for e in RR_joblist:
                 templist.append(e)
 
-            runlist = []
-            # runlist.append(templist[0])
-            # templist.pop(0)
-
-            time  = 0.0
-            while jobcount > 0:    
+            scheduler_time  = 0.0
+            while jobcount > 0:
+                #Indicates if the scheduler has a job in queue
                 hasjob = 0
-                index = 0
-                for e in templist:
-                    if time >= e[3]:
-                        runlist.append(templist[index])
-                        templist.pop(index)
-                    index+=1
 
+                
+                for e in RR_joblist:
+                    index = 0
+                    for e in templist:
+                        #If scheduler time is >= arrival time, add to run queue
+                        if scheduler_time >= e[3]:
+                            runlist.append(templist[index])
+                            templist.pop(index)
+                            continue
+                        index+=1
+
+                #If there is a job in run queue
                 if len(runlist) != 0:
                     job = runlist.pop(0)
                     hasjob = 1
                     pid = job[0]
-                    jobnum  = job[1]
+                    RR_jobnum  = job[1]
                     processName = job[2]
                     arrtime = job[3]
                     burtime = float(job[4])
+                    color = job[5]
 
-                    if response[jobnum] == -1:
-                        response[jobnum] = time
+                    if response[RR_jobnum] == -1:
+                        response[RR_jobnum] = scheduler_time
 
-                    currwait = time - lastran[jobnum]
-                    wait[jobnum] += currwait
+                    currwait = scheduler_time - lastran[RR_jobnum]
+                    wait[RR_jobnum] += currwait
 
+                #If there are no job in run queue and scheduler also no job
                 if len(runlist) == 0 and hasjob == 0:
                     ranfor = quantum
-                    print('  [ time %3d ] CPU idle for %.2f secs' % (time, ranfor))
+                    print('  [ time %3d ] CPU idle for %.2f secs' % (scheduler_time, ranfor))
 
                     #Update Gantt Chart
                     width = ranfor * 40
@@ -497,32 +655,32 @@ class CPUSchedulerGUI:
                 elif burtime > quantum:
                     burtime -= quantum
                     ranfor = quantum
-                    print('  [ time %3d ] Run job %3d for %.2f secs' % (time, jobnum, ranfor))
-                    runlist.append([pid, jobnum, processName, arrtime, burtime])
+                    print('  [ time %3d ] Run job %3d for %.2f secs' % (scheduler_time, RR_jobnum, ranfor))
+                    runlist.append([pid, RR_jobnum, processName, arrtime, burtime, color])
 
                     #Update Gantt Chart
                     width = ranfor * 40
-                    self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill="skyblue")
+                    self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill=job[5])
                     self.gantt_chart.create_text(x + width / 2, 25, text=str(job[0]))
                     x += width
                     progress = self.updateOverallProgress(totalBurstTime, progress, ranfor)
                     self.updateNextQueue(runlist)
                 else:
                     ranfor = burtime
-                    print('  [ time %3d ] Run job %3d for %.2f secs ( DONE at %.2f )' % (time, jobnum, ranfor, time + ranfor))
-                    turnaround[jobnum] = time + ranfor
+                    print('  [ time %3d ] Run job %3d for %.2f secs ( DONE at %.2f )' % (scheduler_time, RR_jobnum, ranfor, scheduler_time + ranfor))
+                    turnaround[RR_jobnum] = scheduler_time + ranfor
                     jobcount -= 1
 
                     #Update Gantt Chart
                     width = ranfor * 40
-                    self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill="skyblue")
+                    self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill=job[5])
                     self.gantt_chart.create_text(x + width / 2, 25, text=str(job[0]))
                     x += width
                     progress = self.updateOverallProgress(totalBurstTime, progress, ranfor)
                     self.updateNextQueue(runlist)
                     
-                time += ranfor
-                lastran[jobnum] = time
+                scheduler_time += ranfor
+                lastran[RR_jobnum] = scheduler_time
 
                 
                 sleep(0.3)
@@ -546,51 +704,59 @@ class CPUSchedulerGUI:
             
             print('\n  Average -- Response: %3.2f  Turnaround %3.2f  Wait %3.2f\n' % (avgResponseTime, avgTurnaroundTime, avgWaitTime))
 
+            self.avg_wt.config(text="Average Waiting Time: " + str(avgWaitTime))
+            self.avg_tat.config(text="Average Turnaround Time: " + str(avgTurnaroundTime))
+            self.avg_rt.config(text="Average Response Time: " + str(avgResponseTime))
             
 
 
         elif selected_algorithm == "SRTF":
             SRTF_joblist = []
+
+            #Initialize values for the progress bar
             progress = 0.0
             totalBurstTime = 0
 
-            for e in joblist:
-                pid = joblist[e]['pid']
-                jobnum = e
-                processName = joblist[e]['processName']
-                arrivalTime = joblist[e]['arrivalTime']
-                burstTime = joblist[e]['burstTime']
+            #Copy only needed info from all_joblist
+            for e in all_joblist:
+                pid = all_joblist[e]['pid']
+                SRTF_jobnum = e
+                processName = all_joblist[e]['processName']
+                arrivalTime = all_joblist[e]['arrivalTime']
+                burstTime = all_joblist[e]['burstTime']
+                color = all_joblist[e]['color']
 
-                SRTF_joblist.append([pid, jobnum, processName, arrivalTime, burstTime])
-                print('[PID', str(pid), '] Jobnum', str(jobnum), 'Job Name ', processName, '[Arrival Time:', str(arrivalTime), '| Burst Time: ', str(burstTime), ']')
+                SRTF_joblist.append([pid, SRTF_jobnum, processName, arrivalTime, burstTime, color])
+                print('[PID', str(pid), '] Jobnum', str(SRTF_jobnum), 'Job Name ', processName, '[Arrival Time:', str(arrivalTime), '| Burst Time: ', str(burstTime), ']')
 
+            #Sorts the joblist based on their arrival time
             SRTF_joblist = sorted(SRTF_joblist, key=lambda e: e[3])
 
+            #Get total burst time for progress bar
             for b in SRTF_joblist:
                 totalBurstTime += b[4]
+            x = 10
 
-            print('Execution trace:')
+            print('\n Debug Execution trace:')
             turnaround = {}
             response = {}
             lastran = {}
             wait = {}
-            quantum  = 1.0
+            quantum  = timeSlice
             jobcount = len(SRTF_joblist)
-            x = 10
-
+            
+            #Stores data of every job
             for i in range(0,jobcount):
                 lastran[i] = 0.0
                 wait[i] = 0.0
                 turnaround[i] = 0.0
                 response[i] = -1
 
+            #To keep track on which jobs are in the queue and not
+            runlist = []
             templist = []
             for e in SRTF_joblist:
                 templist.append(e)
-
-            runlist = []
-            # runlist.append(templist[0])
-            # templist.pop(0)
 
             index = 0
             for e in templist:
@@ -601,20 +767,20 @@ class CPUSchedulerGUI:
                     
                 index+=1
 
-            thetime  = 0.0
+            scheduler_time  = 0.0
             while jobcount > 0:  
                 if len(runlist) != 0:
-                    jobnum = runlist[0][1]
+                    SRTF_jobnum = runlist[0][1]
 
                     if response[runlist[0][1]] == -1:
-                        response[runlist[0][1]] = thetime
+                        response[runlist[0][1]] = scheduler_time
 
-                    currwait = thetime - lastran[runlist[0][1]]
+                    currwait = scheduler_time - lastran[runlist[0][1]]
                     wait[runlist[0][1]] += currwait
 
                 if len(runlist) == 0:
                     ranfor = quantum
-                    print('  [ time %3d ] CPU idle for %.2f secs' % (thetime, ranfor))
+                    print('  [ time %3d ] CPU idle for %.2f secs' % (scheduler_time, ranfor))
 
                     #Update Gantt Chart
                     width = ranfor * 40
@@ -628,23 +794,22 @@ class CPUSchedulerGUI:
 
                     #Update Gantt Chart
                     width = ranfor * 40
-                    self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill="skyblue")
+                    self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill=runlist[0][5])
                     self.gantt_chart.create_text(x + width / 2, 25, text=str(runlist[0][0]))
                     x += width
                     progress = self.updateOverallProgress(totalBurstTime, progress, ranfor)
                     self.updateNextQueue(runlist)
 
-                    print('  [ time %3d ] Run job %3d for %.2f secs' % (thetime, runlist[0][1], ranfor))
+                    print('  [ time %3d ] Run job %3d for %.2f secs' % (scheduler_time, runlist[0][1], ranfor))
                     
                 elif runlist[0][4] <= quantum:
                     ranfor = runlist[0][4]
-                    print('  [ time %3d ] Run job %3d for %.2f secs ( DONE at %.2f )' % (thetime, runlist[0][1], ranfor, thetime + ranfor))
-                    turnaround[runlist[0][1]] = thetime + ranfor
+                    print('  [ time %3d ] Run job %3d for %.2f secs ( DONE at %.2f )' % (scheduler_time, runlist[0][1], ranfor, scheduler_time + ranfor))
+                    turnaround[runlist[0][1]] = scheduler_time + ranfor
 
                     #Update Gantt Chart
-                    
                     width = ranfor * 40
-                    self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill="skyblue")
+                    self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill=runlist[0][5])
                     self.gantt_chart.create_text(x + width / 2, 25, text=str(runlist[0][0]))
                     x += width
                     progress = self.updateOverallProgress(totalBurstTime, progress, ranfor)
@@ -653,12 +818,13 @@ class CPUSchedulerGUI:
                     runlist.pop(0)
                     jobcount -= 1
                     
-                thetime += ranfor
-                lastran[jobnum] = thetime
+                scheduler_time += ranfor
+                lastran[SRTF_jobnum] = scheduler_time
 
                 index = 0
                 for e in templist:
-                    if thetime >= e[3]:
+                    #If scheduler time is >= arrival time, add to run queue
+                    if scheduler_time >= e[3]:
                         if len(runlist) == 0:
                             runlist.append(templist[index])
                             templist.pop(index)
@@ -699,9 +865,147 @@ class CPUSchedulerGUI:
 
             
 
-
         elif selected_algorithm == "MLFQ":
-            print("a")
+            #Initialize values for the progress bar
+            progress = 0.0
+            totalBurstTime = 0
+            for b in all_joblist:
+                totalBurstTime += all_joblist[b]['burstTime']
+            x = 10
+
+            jobnum = all_numberofjobs
+
+            # TIME IS CENTRAL
+            currTime = 0
+            totalJobs = len(all_joblist)
+            finishedJobs = 0
+
+            print('\nExecution Trace:\n')
+
+            while finishedJobs < totalJobs:
+
+                if currTime in MLFQ_runlist:
+                    for (j, type) in MLFQ_runlist[currTime]:
+                        q = all_joblist[j]['currPri']
+                        print('[ time %d ] JOB %d Begins' % (currTime, j))
+                        if type == 'First run':
+                            queue[q].append(j)
+                        else:
+                            queue[q].insert(0, j)
+
+                currQueue = self.FindQueue()
+                if currQueue == -1:
+                    print('[ time %d ] IDLE' % (currTime))
+
+                    #Update Gantt Chart
+                    width = mlfqrr_timeslice * 40
+                    self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill="skyblue")
+                    self.gantt_chart.create_text(x + width / 2, 25, text="IDLE")
+                    x += width
+
+                    currTime += 1
+                    continue
+
+                currJob = queue[currQueue][0]
+                if all_joblist[currJob]['currPri'] != currQueue:
+                    self.Abort('currPri[%d] does not match currQueue[%d]' % (all_joblist[currJob]['currPri'], currQueue))
+
+                all_joblist[currJob]['timeLeft']  -= 1
+                all_joblist[currJob]['ticksLeft'] -= 1
+
+                if all_joblist[currJob]['firstRun'] == -1:
+                    all_joblist[currJob]['firstRun'] = currTime
+
+                burstTime   = all_joblist[currJob]['burstTime']
+                ticksLeft = all_joblist[currJob]['ticksLeft']
+                allotLeft = all_joblist[currJob]['allotLeft']
+                timeLeft  = all_joblist[currJob]['timeLeft']
+
+                #Update Gantt Chart
+                width = mlfqrr_timeslice * 40
+                self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill=all_joblist[currJob]['color'])
+                self.gantt_chart.create_text(x + width / 2, 25, text="Q " + str(currQueue) + "\n" + str(all_joblist[currJob]['pid']))
+                x += width
+                progress = self.updateOverallProgress(totalBurstTime, progress, mlfqrr_timeslice)
+                self.updateNextQueueMLFQ(queue, currQueue)
+
+                print('[ time %d ] Run JOB %d at PRIORITY %d [ TICKS %d ALLOT %d TIME %d (of %d) ]' % \
+                    (currTime, currJob, currQueue, ticksLeft, allotLeft, timeLeft, burstTime))
+
+                if timeLeft < 0:
+                    self.Abort('Error: should never have less than 0 time left to run')
+
+
+                # UPDATE TIME
+                currTime += 1
+
+                # CHECK FOR JOB ENDING
+                if timeLeft == 0:
+                    print('[ time %d ] FINISHED JOB %d' % (currTime, currJob))
+                    finishedJobs += 1
+                    all_joblist[currJob]['endTime'] = currTime
+                    
+                    # print('BEFORE POP', queue)
+                    done = queue[currQueue].pop(0)
+                    # print('AFTER POP', queue)
+                    assert(done == currJob)
+                    sleep(0.3)
+                    continue
+
+                if ticksLeft == 0:
+                    desched = queue[currQueue].pop(0)
+                    assert(desched == currJob)
+
+                    all_joblist[currJob]['allotLeft'] = all_joblist[currJob]['allotLeft'] - 1
+
+                    if all_joblist[currJob]['allotLeft'] == 0:
+                        # this job is DONE at this level, so move on
+                        if currQueue < 3:
+                            # in this case, have to change the priority of the job
+                            all_joblist[currJob]['currPri']   = currQueue + 1
+                            all_joblist[currJob]['ticksLeft'] = mlfqrr_timeslice
+                            all_joblist[currJob]['allotLeft'] = mlfq_timeallotment
+                            queue[currQueue+1].append(currJob)
+
+                        else:
+                            all_joblist[currJob]['ticksLeft'] = mlfqrr_timeslice
+                            all_joblist[currJob]['allotLeft'] = mlfq_timeallotment
+                            queue[currQueue].append(currJob)
+
+                    else:
+                        # this job has more time at this level, so just push it to end
+                        all_joblist[currJob]['ticksLeft'] = mlfqrr_timeslice
+                        queue[currQueue].append(currJob)
+                
+                sleep(0.3)
+                
+
+            # print out statistics
+            print('')
+            print('Final statistics:')
+            responseSum   = 0
+            turnaroundSum = 0
+            for i in range(jobnum):
+                response   = all_joblist[i]['firstRun'] - all_joblist[i]['arrivalTime']
+                turnaround = all_joblist[i]['endTime'] - all_joblist[i]['arrivalTime']
+                print('  Job %2d: arrivalTime %3d - response %3d - turnaround %3d' % (i, all_joblist[i]['arrivalTime'], response, turnaround))
+                responseSum   += response
+                turnaroundSum += turnaround
+
+            
+
+            print('\n  Avg %2d: arrivalTime n/a - response %.2f - turnaround %.2f' % (i, float(responseSum)/jobnum, float(turnaroundSum)/jobnum))
+            print('\n')
+
+            avgResponseTime = float(responseSum)/jobnum
+            avgTurnaroundTime = float(turnaroundSum)/jobnum
+            avgWaitTime = "N/A"
+
+            self.avg_wt.config(text="Average Waiting Time: " + avgWaitTime)
+            self.avg_tat.config(text="Average Turnaround Time: " + str(avgTurnaroundTime))
+            self.avg_rt.config(text="Average Response Time: " + str(avgResponseTime))
+
+        self.action_label.config(text=f"Action: Finished running with {selected_algorithm} scheduling.")
 
     def __init__(self, root):
         self.root = root
