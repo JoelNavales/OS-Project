@@ -46,9 +46,11 @@
      
 **Run The Program**
    - Click "Run Scheduling" to visualize and calculate results.
+     
 **Analyze Results**
    - Gantt chart and job table update automatically.
    - Average turnaround, waiting, and response times are shown at the bottom.
+     
 # Member Roles and Contributions
 # Joel Franco V Navales - GUI design,random job generation
 # Justin Ramas - Backend logic, scheduling algorithm integration, statistics calculation
