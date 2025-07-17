@@ -416,7 +416,7 @@ class CPUSchedulerGUI:
             
 
 
-        elif selected_algorithm == "Round Robin":
+        elif selected_algorithm == "RR":
             RR_joblist = []
             progress = 0.0
             totalBurstTime = 0
@@ -550,7 +550,152 @@ class CPUSchedulerGUI:
 
 
         elif selected_algorithm == "SRTF":
-            print("a")
+            SRTF_joblist = []
+            progress = 0.0
+            totalBurstTime = 0
+
+            for e in joblist:
+                pid = joblist[e]['pid']
+                jobnum = e
+                processName = joblist[e]['processName']
+                arrivalTime = joblist[e]['arrivalTime']
+                burstTime = joblist[e]['burstTime']
+
+                SRTF_joblist.append([pid, jobnum, processName, arrivalTime, burstTime])
+                print('[PID', str(pid), '] Jobnum', str(jobnum), 'Job Name ', processName, '[Arrival Time:', str(arrivalTime), '| Burst Time: ', str(burstTime), ']')
+
+            SRTF_joblist = sorted(SRTF_joblist, key=lambda e: e[3])
+
+            for b in SRTF_joblist:
+                totalBurstTime += b[4]
+
+            print('Execution trace:')
+            turnaround = {}
+            response = {}
+            lastran = {}
+            wait = {}
+            quantum  = 1.0
+            jobcount = len(SRTF_joblist)
+            x = 10
+
+            for i in range(0,jobcount):
+                lastran[i] = 0.0
+                wait[i] = 0.0
+                turnaround[i] = 0.0
+                response[i] = -1
+
+            templist = []
+            for e in SRTF_joblist:
+                templist.append(e)
+
+            runlist = []
+            # runlist.append(templist[0])
+            # templist.pop(0)
+
+            index = 0
+            for e in templist:
+                if 0 == e[3]:
+                    runlist.append(templist[index])
+                    templist.pop(index)
+                    break
+                    
+                index+=1
+
+            thetime  = 0.0
+            while jobcount > 0:  
+                if len(runlist) != 0:
+                    jobnum = runlist[0][1]
+
+                    if response[runlist[0][1]] == -1:
+                        response[runlist[0][1]] = thetime
+
+                    currwait = thetime - lastran[runlist[0][1]]
+                    wait[runlist[0][1]] += currwait
+
+                if len(runlist) == 0:
+                    ranfor = quantum
+                    print('  [ time %3d ] CPU idle for %.2f secs' % (thetime, ranfor))
+
+                    #Update Gantt Chart
+                    width = ranfor * 40
+                    self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill="skyblue")
+                    self.gantt_chart.create_text(x + width / 2, 25, text="IDLE")
+                    x += width
+
+                elif runlist[0][4] > quantum:
+                    runlist[0][4] -= quantum
+                    ranfor = quantum
+
+                    #Update Gantt Chart
+                    width = ranfor * 40
+                    self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill="skyblue")
+                    self.gantt_chart.create_text(x + width / 2, 25, text=str(runlist[0][0]))
+                    x += width
+                    progress = self.updateOverallProgress(totalBurstTime, progress, ranfor)
+                    self.updateNextQueue(runlist)
+
+                    print('  [ time %3d ] Run job %3d for %.2f secs' % (thetime, runlist[0][1], ranfor))
+                    
+                elif runlist[0][4] <= quantum:
+                    ranfor = runlist[0][4]
+                    print('  [ time %3d ] Run job %3d for %.2f secs ( DONE at %.2f )' % (thetime, runlist[0][1], ranfor, thetime + ranfor))
+                    turnaround[runlist[0][1]] = thetime + ranfor
+
+                    #Update Gantt Chart
+                    
+                    width = ranfor * 40
+                    self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill="skyblue")
+                    self.gantt_chart.create_text(x + width / 2, 25, text=str(runlist[0][0]))
+                    x += width
+                    progress = self.updateOverallProgress(totalBurstTime, progress, ranfor)
+                    self.updateNextQueue(runlist)
+                    
+                    runlist.pop(0)
+                    jobcount -= 1
+                    
+                thetime += ranfor
+                lastran[jobnum] = thetime
+
+                index = 0
+                for e in templist:
+                    if thetime >= e[3]:
+                        if len(runlist) == 0:
+                            runlist.append(templist[index])
+                            templist.pop(index)
+                            runlist = sorted(runlist, key=lambda b: b[4])
+                            break
+                        elif runlist[0][4] >= e[4]:
+                            runlist.append(templist[index])
+                            templist.pop(index)
+                            runlist = sorted(runlist, key=lambda b: b[4])
+                            break
+                    
+                    index+=1
+                
+                sleep(0.3)
+
+            print('\nFinal statistics:')
+
+            turnaroundTotal = 0.0
+            waitTotal       = 0.0
+            responseTotal   = 0.0
+
+            for i in range(0,len(SRTF_joblist)):
+                turnaroundTotal += turnaround[i]
+                responseTotal += response[i]
+                waitTotal += wait[i]
+                print('  Job %3d -- Response: %3.2f  Turnaround %3.2f  Wait %3.2f' % (i, response[i], turnaround[i], wait[i]))
+
+            count = len(SRTF_joblist)
+            avgResponseTime = responseTotal/count
+            avgTurnaroundTime = turnaroundTotal/count
+            avgWaitTime = waitTotal/count
+            
+            print('\n  Average -- Response: %3.2f  Turnaround %3.2f  Wait %3.2f\n' % (avgResponseTime, avgTurnaroundTime, avgWaitTime))
+
+            self.avg_wt.config(text="Average Waiting Time: " + str(avgWaitTime))
+            self.avg_tat.config(text="Average Turnaround Time: " + str(avgTurnaroundTime))
+            self.avg_rt.config(text="Average Response Time: " + str(avgResponseTime))
 
             
 
@@ -588,7 +733,7 @@ class CPUSchedulerGUI:
         # Dropdown Menu
         self.clicked = StringVar()
         self.clicked.set("FIFO")
-        self.options = ["FIFO", "Round Robin", "SJF"]
+        self.options = ["FIFO", "RR", "SJF", "SRTF", "MLFQ"]
         self.drop = OptionMenu(input_frame, self.clicked, *self.options)
         self.drop.grid(row=1, column=4, padx=5)
 
