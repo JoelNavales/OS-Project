@@ -4,7 +4,8 @@
 This Python GUI application visualizes the behavior of various CPU scheduling algorithms. Built using `tkinter`, the simulator provides an interactive way to input and generate processes, select scheduling algorithms, and observe how each one handles scheduling over time.
 
 # Sample Output
-<img width="1600" height="860" alt="image" src="https://github.com/user-attachments/assets/d770cb2c-a2d7-4e34-9b2b-9bebe5b556d4" />
+
+<img width="1600" height="857" alt="image" src="https://github.com/user-attachments/assets/c08355b8-3ad2-4883-8c0c-06de7ce900ae" />
 
 The image shows the simulator run by generating 5 random process and using the `RR` scheduling algorithm.
 
@@ -36,7 +37,7 @@ The image shows the simulator run by generating 5 random process and using the `
 
   
 # Instructions on how to use the simulator
-<img width="895" height="267" alt="image" src="https://github.com/user-attachments/assets/94a3880c-690d-477e-b7ba-c82e3c13dcf1" />
+<img width="863" height="261" alt="image" src="https://github.com/user-attachments/assets/c7e8c31a-4535-4cb4-9f34-c26e22a60c37" />
 
 **Add and Remove Processes**
 - You can add processes by:
@@ -61,7 +62,7 @@ The image shows the simulator run by generating 5 random process and using the `
      
 **Analyze Results**
 
-<img width="1600" height="607" alt="image" src="https://github.com/user-attachments/assets/6ff57c1c-043a-4be9-b4a1-00890f5cd368" />
+<img width="1559" height="624" alt="image" src="https://github.com/user-attachments/assets/c0422602-b5fa-4cbc-92c0-21a368af8390" />
 
    - The Gantt Chart and Job Table update at run-time. The Gantt Chart shows if the CPU is idle or which job run in every `Time Tick` by showing the job's PID.
    - Average `Turnaround`, `Waiting`, and `Response` Times are shown at the bottom-left corner of the simulator.
