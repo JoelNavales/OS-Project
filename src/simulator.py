@@ -39,6 +39,8 @@ class CPUSchedulerGUI:
                 if item_id == item:
                     self.process_items.pop(pid)
                     break
+        
+        self.action_label.config(text = "Process Successfully Dequeued.")
 
     def getRandomColor(self):
         r = random.randint(150, 255)
@@ -330,7 +332,7 @@ class CPUSchedulerGUI:
 
                     #Sets response time of job
                     if response[runlist[0][1]] == -1:
-                        response[runlist[0][1]] = scheduler_time
+                        response[runlist[0][1]] = scheduler_time - runlist[0][3]
 
                         for data in self.process_data:
                             pid = data["PID"]
@@ -397,7 +399,7 @@ class CPUSchedulerGUI:
                 elif runlist[0][4] <= quantum:
                     ranfor = runlist[0][4]
                     print('  [ time %3d ] Run job %3d for %.2f secs ( DONE at %.2f )' % (scheduler_time, runlist[0][1], ranfor, scheduler_time + ranfor))
-                    turnaround[runlist[0][1]] = scheduler_time + ranfor
+                    turnaround[runlist[0][1]] = scheduler_time - runlist[0][3]
 
                     #Update Gantt Chart
                     width = ranfor * 40
@@ -527,7 +529,7 @@ class CPUSchedulerGUI:
 
                     #Sets response time of job
                     if response[runlist[0][1]] == -1:
-                        response[runlist[0][1]] = scheduler_time
+                        response[runlist[0][1]] = scheduler_time - runlist[0][3]
 
                         for data in self.process_data:
                             pid = data["PID"]
@@ -593,7 +595,7 @@ class CPUSchedulerGUI:
                 elif runlist[0][4] <= quantum:
                     ranfor = runlist[0][4]
                     print('  [ time %3d ] Run job %3d for %.2f secs ( DONE at %.2f )' % (scheduler_time, runlist[0][1], ranfor, scheduler_time + ranfor))
-                    turnaround[runlist[0][1]] = scheduler_time + ranfor
+                    turnaround[runlist[0][1]] = scheduler_time - runlist[0][3]
 
                     #Update Gantt Chart
                     width = ranfor * 40
@@ -738,7 +740,7 @@ class CPUSchedulerGUI:
                     color = job[5]
 
                     if response[RR_jobnum] == -1:
-                        response[RR_jobnum] = scheduler_time
+                        response[RR_jobnum] = scheduler_time - job[3]
 
                         for data in self.process_data:
                             pid_tree = data["PID"]
@@ -780,6 +782,7 @@ class CPUSchedulerGUI:
                     burtime -= quantum
                     ranfor = quantum
                     print('  [ time %3d ] Run job %3d for %.2f secs' % (scheduler_time, RR_jobnum, ranfor))
+
                     runlist.append([pid, RR_jobnum, processName, arrtime, burtime, color])
 
                     #Update Gantt Chart
@@ -803,7 +806,7 @@ class CPUSchedulerGUI:
                 else:
                     ranfor = burtime
                     print('  [ time %3d ] Run job %3d for %.2f secs ( DONE at %.2f )' % (scheduler_time, RR_jobnum, ranfor, scheduler_time + ranfor))
-                    turnaround[RR_jobnum] = scheduler_time + ranfor
+                    turnaround[RR_jobnum] = scheduler_time - job[3]
                     jobcount -= 1
 
                     #Update Gantt Chart
@@ -921,7 +924,7 @@ class CPUSchedulerGUI:
 
                     #Sets response time of job
                     if response[runlist[0][1]] == -1:
-                        response[runlist[0][1]] = scheduler_time
+                        response[runlist[0][1]] = scheduler_time - runlist[0][3]
 
                         for data in self.process_data:
                             pid = data["PID"]
@@ -986,7 +989,7 @@ class CPUSchedulerGUI:
                 elif runlist[0][4] <= quantum:
                     ranfor = runlist[0][4]
                     print('  [ time %3d ] Run job %3d for %.2f secs ( DONE at %.2f )' % (scheduler_time, runlist[0][1], ranfor, scheduler_time + ranfor))
-                    turnaround[runlist[0][1]] = scheduler_time + ranfor
+                    turnaround[runlist[0][1]] = scheduler_time - runlist[0][3]
 
                     #Update Gantt Chart
                     width = ranfor * 40
@@ -1107,7 +1110,10 @@ class CPUSchedulerGUI:
                                 data["Completion"], data["Turn Around Time"], data["Response Time"], "Waiting"
                             ))
 
+
                     currTime += 1
+
+                    sleep(0.3)
                     continue
 
                 currJob = queue[currQueue][0]
