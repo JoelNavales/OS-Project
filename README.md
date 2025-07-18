@@ -67,7 +67,6 @@ The image shows the simulator run by generating 5 random process and using the `
    - Average `Turnaround`, `Waiting`, and `Response` Times are shown at the bottom-left corner of the simulator.
 
 # Known Bugs
-- Wrong computation for the Turnaround Time.
 - Next job in queue indicator sometimes not showing the next job in queue.
 
 # Member Roles and Contributions
