@@ -358,7 +358,8 @@ class CPUSchedulerGUI:
                     width = ranfor * 40
                     self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill="skyblue")
                     self.gantt_chart.create_text(x + width / 2, 25, text="IDLE")
-                    x += width
+                    self.gantt_chart.create_text(x + width / 2, 50, text=int(scheduler_time))
+                    x += width + 4
 
                     for data in self.process_data:
                         pid = data["PID"]
@@ -378,7 +379,8 @@ class CPUSchedulerGUI:
                     width = ranfor * 40
                     self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill=runlist[0][5])
                     self.gantt_chart.create_text(x + width / 2, 25, text=str(runlist[0][0]))
-                    x += width
+                    self.gantt_chart.create_text(x + width / 2, 50, text=int(scheduler_time))
+                    x += width + 4
 
                     progress = self.updateOverallProgress(totalBurstTime, progress, ranfor)
                     self.updateNextQueue(runlist)
@@ -405,7 +407,8 @@ class CPUSchedulerGUI:
                     width = ranfor * 40
                     self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill=runlist[0][5])
                     self.gantt_chart.create_text(x + width / 2, 25, text=str(runlist[0][0]))
-                    x += width
+                    self.gantt_chart.create_text(x + width / 2, 50, text=int(scheduler_time))
+                    x += width + 4
 
                     progress = self.updateOverallProgress(totalBurstTime, progress, ranfor)
                     self.updateNextQueue(runlist)
@@ -554,7 +557,8 @@ class CPUSchedulerGUI:
                     width = ranfor * 40
                     self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill="skyblue")
                     self.gantt_chart.create_text(x + width / 2, 25, text="IDLE")
-                    x += width
+                    self.gantt_chart.create_text(x + width / 2, 50, text=int(scheduler_time))
+                    x += width + 4
 
                     for data in self.process_data:
                         pid = data["PID"]
@@ -575,7 +579,9 @@ class CPUSchedulerGUI:
                     width = ranfor * 40
                     self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill=runlist[0][5])
                     self.gantt_chart.create_text(x + width / 2, 25, text=str(runlist[0][0]))
-                    x += width
+                    self.gantt_chart.create_text(x + width / 2, 50, text=int(scheduler_time))
+                    x += width + 4
+
                     progress = self.updateOverallProgress(totalBurstTime, progress, ranfor)
                     self.updateNextQueue(runlist)
 
@@ -601,7 +607,9 @@ class CPUSchedulerGUI:
                     width = ranfor * 40
                     self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill=runlist[0][5])
                     self.gantt_chart.create_text(x + width / 2, 25, text=str(runlist[0][0]))
-                    x += width
+                    self.gantt_chart.create_text(x + width / 2, 50, text=int(scheduler_time))
+                    x += width + 4
+
                     progress = self.updateOverallProgress(totalBurstTime, progress, ranfor)
                     self.updateNextQueue(runlist)
 
@@ -765,7 +773,8 @@ class CPUSchedulerGUI:
                     width = ranfor * 40
                     self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill="skyblue")
                     self.gantt_chart.create_text(x + width / 2, 25, text="IDLE")
-                    x += width
+                    self.gantt_chart.create_text(x + width / 2, 50, text=int(scheduler_time))
+                    x += width + 4
 
                     for data in self.process_data:
                         pid_tree = data["PID"]
@@ -789,7 +798,9 @@ class CPUSchedulerGUI:
                     width = ranfor * 40
                     self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill=job[5])
                     self.gantt_chart.create_text(x + width / 2, 25, text=str(job[0]))
-                    x += width
+                    self.gantt_chart.create_text(x + width / 2, 50, text=int(scheduler_time))
+                    x += width + 4
+
                     progress = self.updateOverallProgress(totalBurstTime, progress, ranfor)
                     self.updateNextQueue(runlist)
 
@@ -813,7 +824,9 @@ class CPUSchedulerGUI:
                     width = ranfor * 40
                     self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill=job[5])
                     self.gantt_chart.create_text(x + width / 2, 25, text=str(job[0]))
-                    x += width
+                    self.gantt_chart.create_text(x + width / 2, 50, text=int(scheduler_time))
+                    x += width + 4
+
                     progress = self.updateOverallProgress(totalBurstTime, progress, ranfor)
                     self.updateNextQueue(runlist)
 
@@ -949,7 +962,8 @@ class CPUSchedulerGUI:
                     width = ranfor * 40
                     self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill="skyblue")
                     self.gantt_chart.create_text(x + width / 2, 25, text="IDLE")
-                    x += width
+                    self.gantt_chart.create_text(x + width / 2, 50, text=int(scheduler_time))
+                    x += width + 4
 
                     for data in self.process_data:
                         pid = data["PID"]
@@ -969,7 +983,9 @@ class CPUSchedulerGUI:
                     width = ranfor * 40
                     self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill=runlist[0][5])
                     self.gantt_chart.create_text(x + width / 2, 25, text=str(runlist[0][0]))
-                    x += width
+                    self.gantt_chart.create_text(x + width / 2, 50, text=int(scheduler_time))
+                    x += width + 4
+
                     progress = self.updateOverallProgress(totalBurstTime, progress, ranfor)
                     self.updateNextQueue(runlist)
 
@@ -995,7 +1011,9 @@ class CPUSchedulerGUI:
                     width = ranfor * 40
                     self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill=runlist[0][5])
                     self.gantt_chart.create_text(x + width / 2, 25, text=str(runlist[0][0]))
-                    x += width
+                    self.gantt_chart.create_text(x + width / 2, 50, text=int(scheduler_time))
+                    x += width + 4
+
                     progress = self.updateOverallProgress(totalBurstTime, progress, ranfor)
                     self.updateNextQueue(runlist)
 
@@ -1071,7 +1089,7 @@ class CPUSchedulerGUI:
 
             jobnum = all_numberofjobs
 
-            currTime = 0
+            scheduler_time = 0
             totalJobs = len(all_joblist)
             finishedJobs = 0
 
@@ -1080,11 +1098,11 @@ class CPUSchedulerGUI:
             while finishedJobs < totalJobs:
                 
                 print(MLFQ_runlist)
-                if currTime in MLFQ_runlist:
-                    for (j, type) in MLFQ_runlist[currTime]:
+                if scheduler_time in MLFQ_runlist:
+                    for (j, type) in MLFQ_runlist[scheduler_time]:
                         print(j)
                         q = all_joblist[j]['currPri']
-                        print('[ time %d ] JOB %d Begins' % (currTime, j))
+                        print('[ time %d ] JOB %d Begins' % (scheduler_time, j))
                         if type == 'First run':
                             queue[q].append(j)
                         else:
@@ -1092,13 +1110,14 @@ class CPUSchedulerGUI:
 
                 currQueue = self.FindQueue()
                 if currQueue == -1:
-                    print('[ time %d ] IDLE' % (currTime))
+                    print('[ time %d ] IDLE' % (scheduler_time))
 
                     #Update Gantt Chart
                     width = mlfqrr_timeslice * 40
                     self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill="skyblue")
                     self.gantt_chart.create_text(x + width / 2, 25, text="IDLE")
-                    x += width
+                    self.gantt_chart.create_text(x + width / 2, 50, text=int(scheduler_time))
+                    x += width + 4
 
                     for data in self.process_data:
                         pid = data["PID"]
@@ -1111,7 +1130,7 @@ class CPUSchedulerGUI:
                             ))
 
 
-                    currTime += 1
+                    scheduler_time += 1
 
                     sleep(0.3)
                     continue
@@ -1124,7 +1143,7 @@ class CPUSchedulerGUI:
                 all_joblist[currJob]['ticksLeft'] -= 1
 
                 if all_joblist[currJob]['firstRun'] == -1:
-                    all_joblist[currJob]['firstRun'] = currTime
+                    all_joblist[currJob]['firstRun'] = scheduler_time
 
                 burstTime   = all_joblist[currJob]['burstTime']
                 ticksLeft = all_joblist[currJob]['ticksLeft']
@@ -1134,8 +1153,10 @@ class CPUSchedulerGUI:
                 #Update Gantt Chart
                 width = mlfqrr_timeslice * 40
                 self.gantt_chart.create_rectangle(x, 10, x + width, 40, fill=all_joblist[currJob]['color'])
-                self.gantt_chart.create_text(x + width / 2, 25, text="Q " + str(currQueue) + "\n" + str(all_joblist[currJob]['pid']))
-                x += width
+                self.gantt_chart.create_text(x + width / 2, 25, text="Q " + str(currQueue) + "\n  " + str(all_joblist[currJob]['pid']))
+                self.gantt_chart.create_text(x + width / 2, 50, text=int(scheduler_time))
+                x += width + 4
+
                 progress = self.updateOverallProgress(totalBurstTime, progress, mlfqrr_timeslice)
                 self.updateNextQueueMLFQ(queue, currQueue)
 
@@ -1153,20 +1174,20 @@ class CPUSchedulerGUI:
                                 ))
 
                 print('[ time %d ] Run JOB %d at PRIORITY %d [ TICKS %d ALLOT %d TIME %d (of %d) ]' % \
-                    (currTime, currJob, currQueue, ticksLeft, allotLeft, timeLeft, burstTime))
+                    (scheduler_time, currJob, currQueue, ticksLeft, allotLeft, timeLeft, burstTime))
 
                 if timeLeft < 0:
                     self.Abort('Error: should never have less than 0 time left to run')
 
 
                 # UPDATE TIME
-                currTime += 1
+                scheduler_time += 1
 
                 # CHECK FOR JOB ENDING
                 if timeLeft == 0:
-                    print('[ time %d ] FINISHED JOB %d' % (currTime, currJob))
+                    print('[ time %d ] FINISHED JOB %d' % (scheduler_time, currJob))
                     finishedJobs += 1
-                    all_joblist[currJob]['endTime'] = currTime
+                    all_joblist[currJob]['endTime'] = scheduler_time
 
                     for data in self.process_data:
                         pid = data["PID"]
@@ -1179,7 +1200,7 @@ class CPUSchedulerGUI:
                             item_id = self.process_items[pid]
                             self.status_tree.item(item_id, values=(
                                 pid, data["Name"], data["Arrival"], data["Burst"],
-                                str(currTime), str(turnaround), data["Response Time"], "Completed"
+                                str(scheduler_time), str(turnaround), data["Response Time"], "Completed"
                             ))
                     
                     done = queue[currQueue].pop(0)
